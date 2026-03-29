@@ -1,0 +1,50 @@
+ services:
+  openttd-server:
+    image: bateau/openttd:latest
+    container_name: openttd-server
+    restart: unless-stopped
+    volumes:
+      - ${OPENTTD_DATA_DIR}:/home/openttd/.openttd
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - loadgame=${LOADGAME:-false}
+      - savename=${SAVENAME:-}
+      - savepath=/home/openttd/.openttd
+    networks:
+      openttd_network:
+        ipv4_address: ${OPENTTD_SERVER_IP:-172.19.0.5}
+    stdin_open: true
+    tty: true
+
+  tcp-guard:
+    build:
+      context: ./tcp-guard
+    image: tcp-guard:latest
+    container_name: tcp-guard
+    restart: unless-stopped
+    depends_on:
+      - openttd-server
+    environment:
+      - TCP_GUARD_PROXY_TIMEOUT=${TCP_GUARD_PROXY_TIMEOUT:-30m}
+      - TCP_GUARD_CONNECT_TIMEOUT=${TCP_GUARD_CONNECT_TIMEOUT:-5s}
+      - TCP_GUARD_PREREAD_TIMEOUT=${TCP_GUARD_PREREAD_TIMEOUT:-5s}
+    networks:
+      openttd_network:
+        ipv4_address: ${TCP_GUARD_IP:-172.19.0.10}
+
+  playit:
+    image: ghcr.io/playit-cloud/playit-agent:latest
+    container_name: playit-tunnel
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY=${PLAYIT_SECRET_KEY}
+    networks:
+      - openttd_network
+
+networks:
+  openttd_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET:-172.19.0.0/24}

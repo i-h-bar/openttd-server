@@ -1,0 +1,134 @@
+# OpenTTD Server
+
+A Dockerised OpenTTD dedicated server exposed via a [playit.gg](https://playit.gg) tunnel, with a TCP/UDP proxy (tcp-guard) sitting between the tunnel and the game server.
+
+## Architecture
+
+```
+Internet → playit tunnel → tcp-guard (TCP_GUARD_IP:3979) → openttd-server (OPENTTD_SERVER_IP:3979)
+```
+
+## Prerequisites
+
+- Docker and Docker Compose
+- A [playit.gg](https://playit.gg) account with a tunnel configured for port 3979
+
+## Setup
+
+### 1. Configure the playit.gg tunnel
+
+In the playit.gg dashboard, set the tunnel's local destination to:
+
+```
+172.19.0.10:3979
+```
+
+> If you change `TCP_GUARD_IP` in your `.env`, use that IP here instead.
+
+### 2. Create a `.env` file
+
+Copy the example below and fill in your values:
+
+```env
+# Path to your .openttd directory on the host (required)
+OPENTTD_DATA_DIR=/path/to/your/.openttd
+
+# Your UID and GID so the container user matches the host user (for file permissions)
+PUID=1000
+PGID=1000
+
+# Your playit.gg agent secret key (required)
+PLAYIT_SECRET_KEY=your_secret_key_here
+
+# Load a saved game on startup (optional)
+# Set to "true" and provide SAVENAME to load a specific save
+# Set to "last-autosave" to load the most recent autosave
+# Set to "exit" to load the exit save
+# LOADGAME=true
+# SAVENAME=game.sav
+```
+
+### 3. Start the server
+
+```bash
+./run.sh
+```
+
+The script validates that all required environment variables are set, builds the tcp-guard image, and starts all containers.
+
+---
+
+## Environment Variables
+
+### OpenTTD Server
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `OPENTTD_DATA_DIR` | Yes | — | Host path mounted as `/home/openttd/.openttd`. Must contain your `openttd.cfg` and `save/` directory |
+| `PUID` | No | current user | User ID of the `openttd` user inside the container. Defaults to the UID of whoever runs `run.sh`. Override in `.env` if needed |
+| `PGID` | No | current user | Group ID of the `openttd` user inside the container. Defaults to the GID of whoever runs `run.sh`. Override in `.env` if needed |
+| `LOADGAME` | No | `false` | Controls which save to load: `false` (new game), `true` (use `SAVENAME`), `last-autosave`, or `exit` |
+| `SAVENAME` | No | — | Save file name to load when `LOADGAME=true` (e.g. `game.sav`) |
+
+### Playit Tunnel
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `PLAYIT_SECRET_KEY` | Yes | — | Secret key from the playit.gg dashboard |
+
+### TCP Guard
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `TCP_GUARD_PROXY_TIMEOUT` | No | `30m` | How long an idle connection is kept open. Use nginx time format: `30m`, `3h`, `1h30m` |
+| `TCP_GUARD_CONNECT_TIMEOUT` | No | `5s` | How long to wait for the upstream (openttd-server) to accept a TCP connection |
+| `TCP_GUARD_PREREAD_TIMEOUT` | No | `5s` | How long to wait for the client to send data after connecting |
+
+### Docker Network
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `OPENTTD_SERVER_IP` | No | `172.19.0.5` | Static IP assigned to the openttd-server container |
+| `TCP_GUARD_IP` | No | `172.19.0.10` | Static IP assigned to the tcp-guard container. Set this as the tunnel destination in the playit.gg dashboard |
+| `DOCKER_SUBNET` | No | `172.19.0.0/24` | Subnet for the internal Docker network. Change if it conflicts with your host network |
+
+---
+
+## Scripts
+
+| Script | Description |
+|---|---|
+| `run.sh` | Build and start all containers |
+| `stop.sh` | Stop the openttd-server container |
+| `restart.sh` | Restart the openttd-server container |
+| `remove.sh` | Stop and remove all containers |
+| `logs.sh` | Tail openttd-server logs |
+| `console.sh` | Attach to the openttd-server console |
+
+---
+
+## Troubleshooting
+
+### Players can't connect
+
+1. Check the playit.gg dashboard — the tunnel destination must be `<TCP_GUARD_IP>:3979` (default `172.19.0.10:3979`)
+2. Confirm all containers are running: `docker ps`
+3. Check tcp-guard logs for refused connections: `docker logs tcp-guard`
+
+### Server can't read/write save files
+
+Check that `PUID` and `PGID` match your host user. Run `id` on the host to find your UID and GID.
+
+### Docker network subnet is already in use
+
+Set `DOCKER_SUBNET` in your `.env` to a free subnet and update `OPENTTD_SERVER_IP` and `TCP_GUARD_IP` to addresses within it. Remove the old network before restarting:
+
+```bash
+./remove.sh
+docker network prune
+./run.sh
+```
+
+### tcp-guard fails to start
+
+Check logs with `docker logs tcp-guard`. A common cause is an invalid value for one of the `TCP_GUARD_*` timeout variables — nginx requires a specific time format (e.g. `5s`, `30m`, `3h`). Plain numbers without a unit will cause nginx to reject the config.
