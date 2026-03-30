@@ -162,8 +162,8 @@ fn run(addr: &str, password: &str, bot_name: &str, save_name: &str, save_interva
             }
             "!save" => {
                 println!("Received !save — saving game.");
-                send_rcon(&mut stream, "say \"Saving game...\"")?;
                 send_rcon(&mut stream, &format!("save {save_name}"))?;
+                send_rcon(&mut stream, "say \"Game is saved.\"")?;
                 last_save = Instant::now();
             }
             _ => {}
