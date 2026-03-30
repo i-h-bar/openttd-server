@@ -103,6 +103,8 @@ The script validates that all required environment variables are set, builds the
 | `OPENTTD_ADMIN_PASSWORD` | Yes | — | Password for the OpenTTD admin port. Must match `admin_password` in `secrets.cfg` |
 | `OPENTTD_ADMIN_PORT` | No | `3977` | Admin port the bot connects to. Must match `server_admin_port` in `openttd.cfg` |
 | `BOT_NAME` | No | `chat-bot` | Name the bot presents to the server on the admin connection |
+| `SAVENAME` | No | `autosave_bot` | Save file name the bot writes via RCON on each interval. `.sav` extension is stripped automatically if present |
+| `SAVE_INTERVAL_MINS` | No | `10` | How often (in minutes) the bot issues a save command |
 
 ### Playit Tunnel
 

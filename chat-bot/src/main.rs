@@ -2,7 +2,7 @@ use std::env;
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 // Client -> Server
 const PKT_ADMIN_JOIN: u8 = 0;
@@ -81,7 +81,7 @@ fn read_cstring(data: &[u8], offset: &mut usize) -> String {
     s
 }
 
-fn run(addr: &str, password: &str, bot_name: &str) -> io::Result<()> {
+fn run(addr: &str, password: &str, bot_name: &str, save_name: &str, save_interval: Duration) -> io::Result<()> {
     let mut stream = TcpStream::connect(addr)?;
     println!("Connected to {addr}");
 
@@ -106,10 +106,33 @@ fn run(addr: &str, password: &str, bot_name: &str) -> io::Result<()> {
         }
     }
 
-    println!("Ready. Listening for !pause / !unpause in game chat.");
+    println!(
+        "Ready. Listening for !pause / !unpause. Auto-saving as '{}' every {}m.",
+        save_name,
+        save_interval.as_secs() / 60
+    );
+
+    // Use a short read timeout so the save timer fires even when the server is quiet.
+    stream.set_read_timeout(Some(Duration::from_secs(1)))?;
+
+    let mut last_save = Instant::now();
 
     loop {
-        let (kind, payload) = read_packet(&mut stream)?;
+        // Check if a periodic save is due before blocking on the next packet.
+        if last_save.elapsed() >= save_interval {
+            println!("Auto-saving as '{save_name}'...");
+            send_rcon(&mut stream, "say Saving game...")?;
+            send_rcon(&mut stream, &format!("save {save_name}"))?;
+            last_save = Instant::now();
+        }
+
+        let (kind, payload) = match read_packet(&mut stream) {
+            Ok(pkt) => pkt,
+            Err(e) if e.kind() == io::ErrorKind::WouldBlock || e.kind() == io::ErrorKind::TimedOut => {
+                continue;
+            }
+            Err(e) => return Err(e),
+        };
 
         if kind != PKT_SERVER_CHAT {
             continue;
@@ -137,6 +160,12 @@ fn run(addr: &str, password: &str, bot_name: &str) -> io::Result<()> {
                 println!("Received !unpause — unpausing server.");
                 send_rcon(&mut stream, "unpause")?;
             }
+            "!save" => {
+                println!("Received !save — saving game.");
+                send_rcon(&mut stream, "say \"Saving game...\"")?;
+                send_rcon(&mut stream, &format!("save {save_name}"))?;
+                last_save = Instant::now();
+            }
             _ => {}
         }
     }
@@ -147,11 +176,20 @@ fn main() {
     let port = env::var("OPENTTD_ADMIN_PORT").unwrap_or_else(|_| "3977".to_string());
     let password = env::var("OPENTTD_ADMIN_PASSWORD").expect("OPENTTD_ADMIN_PASSWORD must be set");
     let bot_name = env::var("BOT_NAME").unwrap_or_else(|_| "chat-bot".to_string());
+    let save_name = env::var("SAVENAME")
+        .unwrap_or_else(|_| "autosave_bot".to_string())
+        .trim_end_matches(".sav")
+        .to_string();
+    let save_interval_mins: u64 = env::var("SAVE_INTERVAL_MINS")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse()
+        .expect("SAVE_INTERVAL_MINS must be a positive integer");
 
     let addr = format!("{host}:{port}");
+    let save_interval = Duration::from_secs(save_interval_mins * 60);
 
     loop {
-        match run(&addr, &password, &bot_name) {
+        match run(&addr, &password, &bot_name, &save_name, save_interval) {
             Ok(_) => println!("Disconnected. Reconnecting in 5s..."),
             Err(e) => eprintln!("Error: {e}. Reconnecting in 5s..."),
         }

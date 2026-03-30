@@ -46,6 +46,8 @@ services:
       - OPENTTD_ADMIN_PORT=${OPENTTD_ADMIN_PORT:-3977}
       - OPENTTD_ADMIN_PASSWORD=${OPENTTD_ADMIN_PASSWORD}
       - BOT_NAME=${BOT_NAME:-chat-bot}
+      - SAVENAME=${SAVENAME:-autosave_bot}
+      - SAVE_INTERVAL_MINS=${SAVE_INTERVAL_MINS:-10}
     networks:
       openttd_network:
 
