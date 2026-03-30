@@ -1,4 +1,4 @@
- services:
+services:
   openttd-server:
     image: bateau/openttd:latest
     container_name: openttd-server
