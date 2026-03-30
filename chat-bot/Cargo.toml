@@ -1,0 +1,8 @@
+[package]
+name = "openttd-chat-bot"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "chat-bot"
+path = "src/main.rs"

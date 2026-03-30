@@ -33,6 +33,22 @@ services:
       openttd_network:
         ipv4_address: ${TCP_GUARD_IP:-172.19.0.10}
 
+  chat-bot:
+    build:
+      context: ./chat-bot
+    image: openttd-chat-bot:latest
+    container_name: openttd-chat-bot
+    restart: unless-stopped
+    depends_on:
+      - openttd-server
+    environment:
+      - OPENTTD_HOST=openttd-server
+      - OPENTTD_ADMIN_PORT=${OPENTTD_ADMIN_PORT:-3977}
+      - OPENTTD_ADMIN_PASSWORD=${OPENTTD_ADMIN_PASSWORD}
+      - BOT_NAME=${BOT_NAME:-chat-bot}
+    networks:
+      openttd_network:
+
   playit:
     image: ghcr.io/playit-cloud/playit-agent:latest
     container_name: playit-tunnel

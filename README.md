@@ -40,6 +40,9 @@ PGID=1000
 # Your playit.gg agent secret key (required)
 PLAYIT_SECRET_KEY=your_secret_key_here
 
+# Admin port password — must match secrets.cfg (see step 3)
+OPENTTD_ADMIN_PASSWORD=your_admin_password_here
+
 # Load a saved game on startup (optional)
 # Set to "true" and provide SAVENAME to load a specific save
 # Set to "last-autosave" to load the most recent autosave
@@ -47,6 +50,29 @@ PLAYIT_SECRET_KEY=your_secret_key_here
 # LOADGAME=true
 # SAVENAME=game.sav
 ```
+
+### 3. Configure the OpenTTD admin port
+
+The chat-bot connects to OpenTTD's admin port (3977). Two things must be set correctly in your `openttd.cfg` and `secrets.cfg` inside `OPENTTD_DATA_DIR`.
+
+**`openttd.cfg`** — ensure these are present under `[network]`:
+
+```ini
+server_admin_port = 3977
+server_admin_chat = true
+allow_insecure_admin_login = true
+```
+
+**`secrets.cfg`** — set the admin password (OpenTTD 15.x stores all passwords here; the `admin_password` key in `openttd.cfg` is ignored):
+
+```ini
+[network]
+admin_password = your_admin_password_here
+```
+
+> The password here must match `OPENTTD_ADMIN_PASSWORD` in your `.env`.
+>
+> `allow_insecure_admin_login = true` is required because the bot connects over plain TCP. Without it, OpenTTD will not open the admin port at all.
 
 ### 3. Start the server
 
@@ -69,6 +95,14 @@ The script validates that all required environment variables are set, builds the
 | `PGID` | No | current user | Group ID of the `openttd` user inside the container. Defaults to the GID of whoever runs `run.sh`. Override in `.env` if needed |
 | `LOADGAME` | No | `false` | Controls which save to load: `false` (new game), `true` (use `SAVENAME`), `last-autosave`, or `exit` |
 | `SAVENAME` | No | — | Save file name to load when `LOADGAME=true` (e.g. `game.sav`) |
+
+### Chat Bot
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `OPENTTD_ADMIN_PASSWORD` | Yes | — | Password for the OpenTTD admin port. Must match `admin_password` in `secrets.cfg` |
+| `OPENTTD_ADMIN_PORT` | No | `3977` | Admin port the bot connects to. Must match `server_admin_port` in `openttd.cfg` |
+| `BOT_NAME` | No | `chat-bot` | Name the bot presents to the server on the admin connection |
 
 ### Playit Tunnel
 
@@ -128,6 +162,15 @@ Set `DOCKER_SUBNET` in your `.env` to a free subnet and update `OPENTTD_SERVER_I
 docker network prune
 ./run.sh
 ```
+
+### Chat bot keeps printing "Connection refused"
+
+The bot connects to the OpenTTD admin port (3977). If it can't connect:
+
+1. **Check `secrets.cfg`** — in OpenTTD 15.x, `admin_password` must be set in `secrets.cfg`, not `openttd.cfg`. An empty password causes OpenTTD to skip opening the admin port entirely.
+2. **Check `allow_insecure_admin_login`** — must be `true` in `openttd.cfg`. When `false`, OpenTTD will not open the plain-TCP admin port.
+3. **Verify the port is open** — after restarting, `docker logs openttd-server` should include a line like `Listening on 0.0.0.0:3977 (Admin Port)`. If that line is absent, the admin port did not start (check the two points above).
+4. **Check the password matches** — `OPENTTD_ADMIN_PASSWORD` in `.env` must equal `admin_password` in `secrets.cfg`.
 
 ### tcp-guard fails to start
 
