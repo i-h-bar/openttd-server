@@ -6,5 +6,5 @@ COPY src/ src/
 RUN cargo build --release
 
 FROM scratch
-COPY --from=builder /app/target/release/chat-bot /chat-bot
-CMD ["/chat-bot"]
+COPY --from=builder /app/target/release/utils-bot /utils-bot
+CMD ["/utils-bot"]

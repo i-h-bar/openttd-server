@@ -33,11 +33,11 @@ services:
       openttd_network:
         ipv4_address: ${TCP_GUARD_IP:-172.19.0.10}
 
-  chat-bot:
+  utils-bot:
     build:
-      context: ./chat-bot
-    image: openttd-chat-bot:latest
-    container_name: openttd-chat-bot
+      context: ./utils-bot
+    image: openttd-utils-bot:latest
+    container_name: openttd-utils-bot
     restart: unless-stopped
     depends_on:
       - openttd-server
@@ -45,7 +45,7 @@ services:
       - OPENTTD_HOST=openttd-server
       - OPENTTD_ADMIN_PORT=${OPENTTD_ADMIN_PORT:-3977}
       - OPENTTD_ADMIN_PASSWORD=${OPENTTD_ADMIN_PASSWORD}
-      - BOT_NAME=${BOT_NAME:-chat-bot}
+      - BOT_NAME=${BOT_NAME:-utils-bot}
       - SAVENAME=${SAVENAME:-autosave_bot}
       - SAVE_INTERVAL_MINS=${SAVE_INTERVAL_MINS:-10}
     networks:

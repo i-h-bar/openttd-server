@@ -12,9 +12,12 @@ const PKT_ADMIN_RCON: u8 = 5;
 // Server -> Client
 const PKT_SERVER_PROTOCOL: u8 = 103;
 const PKT_SERVER_WELCOME: u8 = 104;
+const PKT_SERVER_DATE: u8 = 107;
 const PKT_SERVER_CHAT: u8 = 119;
 
+const UPDATE_DATE: u16 = 0;
 const UPDATE_CHAT: u16 = 5;
+const FREQ_DAILY: u16 = 0x02;
 const FREQ_AUTOMATIC: u16 = 0x40;
 
 fn build_packet(kind: u8, payload: &[u8]) -> Vec<u8> {
@@ -44,6 +47,13 @@ fn send_subscribe_chat(stream: &mut TcpStream) -> io::Result<()> {
     let mut payload = Vec::new();
     payload.extend_from_slice(&UPDATE_CHAT.to_le_bytes());
     payload.extend_from_slice(&FREQ_AUTOMATIC.to_le_bytes());
+    stream.write_all(&build_packet(PKT_ADMIN_UPDATE_FREQUENCY, &payload))
+}
+
+fn send_subscribe_date(stream: &mut TcpStream) -> io::Result<()> {
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&UPDATE_DATE.to_le_bytes());
+    payload.extend_from_slice(&FREQ_DAILY.to_le_bytes());
     stream.write_all(&build_packet(PKT_ADMIN_UPDATE_FREQUENCY, &payload))
 }
 
@@ -93,8 +103,9 @@ fn run(addr: &str, password: &str, bot_name: &str, save_name: &str, save_interva
         match kind {
             PKT_SERVER_PROTOCOL => {}
             PKT_SERVER_WELCOME => {
-                println!("Authenticated. Subscribing to chat...");
+                println!("Authenticated. Subscribing to chat and date...");
                 send_subscribe_chat(&mut stream)?;
+                send_subscribe_date(&mut stream)?;
                 break;
             }
             other => {
@@ -116,13 +127,20 @@ fn run(addr: &str, password: &str, bot_name: &str, save_name: &str, save_interva
     stream.set_read_timeout(Some(Duration::from_secs(1)))?;
 
     let mut last_save = Instant::now();
+    let mut current_date: Option<u32> = None;
+    let mut last_saved_date: Option<u32> = None;
 
     loop {
         // Check if a periodic save is due before blocking on the next packet.
         if last_save.elapsed() >= save_interval {
-            println!("Auto-saving as '{save_name}'...");
-            send_rcon(&mut stream, "say Saving game...")?;
-            send_rcon(&mut stream, &format!("save {save_name}"))?;
+            if current_date.is_some() && current_date == last_saved_date {
+                println!("Auto-save skipped — in-game date unchanged since last save.");
+            } else {
+                println!("Auto-saving as '{save_name}'...");
+                send_rcon(&mut stream, "say Saving game...")?;
+                send_rcon(&mut stream, &format!("save {save_name}"))?;
+                last_saved_date = current_date;
+            }
             last_save = Instant::now();
         }
 
@@ -133,6 +151,13 @@ fn run(addr: &str, password: &str, bot_name: &str, save_name: &str, save_interva
             }
             Err(e) => return Err(e),
         };
+
+        if kind == PKT_SERVER_DATE {
+            if payload.len() >= 4 {
+                current_date = Some(u32::from_le_bytes([payload[0], payload[1], payload[2], payload[3]]));
+            }
+            continue;
+        }
 
         if kind != PKT_SERVER_CHAT {
             continue;
@@ -164,6 +189,7 @@ fn run(addr: &str, password: &str, bot_name: &str, save_name: &str, save_interva
                 println!("Received !save — saving game.");
                 send_rcon(&mut stream, &format!("save {save_name}"))?;
                 send_rcon(&mut stream, "say \"Game is saved.\"")?;
+                last_saved_date = current_date;
                 last_save = Instant::now();
             }
             _ => {}
@@ -175,7 +201,7 @@ fn main() {
     let host = env::var("OPENTTD_HOST").unwrap_or_else(|_| "openttd-server".to_string());
     let port = env::var("OPENTTD_ADMIN_PORT").unwrap_or_else(|_| "3977".to_string());
     let password = env::var("OPENTTD_ADMIN_PASSWORD").expect("OPENTTD_ADMIN_PASSWORD must be set");
-    let bot_name = env::var("BOT_NAME").unwrap_or_else(|_| "chat-bot".to_string());
+    let bot_name = env::var("BOT_NAME").unwrap_or_else(|_| "utils-bot".to_string());
     let save_name = env::var("SAVENAME")
         .unwrap_or_else(|_| "autosave_bot".to_string())
         .trim_end_matches(".sav")

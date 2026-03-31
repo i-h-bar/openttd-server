@@ -53,7 +53,7 @@ OPENTTD_ADMIN_PASSWORD=your_admin_password_here
 
 ### 3. Configure the OpenTTD admin port
 
-The chat-bot connects to OpenTTD's admin port (3977). Two things must be set correctly in your `openttd.cfg` and `secrets.cfg` inside `OPENTTD_DATA_DIR`.
+The utils-bot connects to OpenTTD's admin port (3977). Two things must be set correctly in your `openttd.cfg` and `secrets.cfg` inside `OPENTTD_DATA_DIR`.
 
 **`openttd.cfg`** — ensure these are present under `[network]`:
 
@@ -143,13 +143,13 @@ admin_password = your_admin_password_here
 | `LOADGAME` | No | `false` | Controls which save to load: `false` (new game), `true` (use `SAVENAME`), `last-autosave`, or `exit` |
 | `SAVENAME` | No | — | Save file name to load when `LOADGAME=true` (e.g. `game.sav`) |
 
-### Chat Bot
+### Utils Bot
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `OPENTTD_ADMIN_PASSWORD` | Yes | — | Password for the OpenTTD admin port. Must match `admin_password` in `secrets.cfg` |
 | `OPENTTD_ADMIN_PORT` | No | `3977` | Admin port the bot connects to. Must match `server_admin_port` in `openttd.cfg` |
-| `BOT_NAME` | No | `chat-bot` | Name the bot presents to the server on the admin connection |
+| `BOT_NAME` | No | `utils-bot` | Name the bot presents to the server on the admin connection |
 | `SAVENAME` | No | `autosave_bot` | Save file name the bot writes via RCON on each interval. `.sav` extension is stripped automatically if present |
 | `SAVE_INTERVAL_MINS` | No | `10` | How often (in minutes) the bot issues a save command |
 
@@ -212,7 +212,7 @@ docker network prune
 ./run.sh
 ```
 
-### Chat bot keeps printing "Connection refused"
+### Utils bot keeps printing "Connection refused"
 
 The bot connects to the OpenTTD admin port (3977). If it can't connect:
 
