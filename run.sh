@@ -77,11 +77,6 @@ else
     echo "  openttd.cfg found — checking settings..."
     set_ini_value "$OPENTTD_CFG" "network" "allow_insecure_admin_login" "true"
     echo "    allow_insecure_admin_login = true  ✓"
-
-    if [ -n "${OPENTTD_ADMIN_PASSWORD:-}" ]; then
-        set_ini_value "$OPENTTD_CFG" "network" "admin_password" "$OPENTTD_ADMIN_PASSWORD"
-        echo "    admin_password synced  ✓"
-    fi
 fi
 
 # --- secrets.cfg ---
