@@ -6,7 +6,7 @@ services:
     volumes:
       - ${OPENTTD_DATA_DIR}:/home/openttd/.openttd
       - ${OPENTTD_DATA_DIR}:/home/openttd/.local/share/openttd
-      - ${OPENTTD_DATA_DIR}:/usr/share/games/openttd/
+      - ${OPENTTD_DATA_DIR}:/usr/share/games/openttd/openttd
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
