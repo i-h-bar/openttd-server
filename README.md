@@ -43,6 +43,9 @@ PLAYIT_SECRET_KEY=your_secret_key_here
 # Admin port password — synced to secrets.cfg automatically by run.sh
 OPENTTD_ADMIN_PASSWORD=your_admin_password_here
 
+# Server name shown in the multiplayer lobby — synced to openttd.cfg automatically by run.sh
+SERVER_NAME="My OpenTTD Server"
+
 # Load a saved game on startup (optional)
 # Set to "true" and provide SAVENAME to load a specific save
 # Set to "last-autosave" to load the most recent autosave
@@ -87,6 +90,7 @@ SAVENAME=mygame.sav
 
 OPENTTD_ADMIN_PASSWORD=your_admin_password_here
 SERVER_PASSWORD=your_join_password_here   # optional — leave unset for a public server
+SERVER_NAME="My OpenTTD Server"           # optional — shown in the multiplayer lobby
 SAVE_INTERVAL_MINS=10
 ```
 
@@ -133,6 +137,7 @@ admin_password = <OPENTTD_ADMIN_PASSWORD>
 |---|---|---|---|
 | `OPENTTD_ADMIN_PASSWORD` | Yes | — | Password for the OpenTTD admin port. Synced to `admin_password` in `secrets.cfg` by `run.sh` |
 | `SERVER_PASSWORD` | No | — | Join password for the game server. Synced to `server_password` in `secrets.cfg` by `run.sh`. Leave unset for a public server |
+| `SERVER_NAME` | No | — | Name shown in the multiplayer lobby. Synced to `server_name` in `openttd.cfg` by `run.sh` |
 | `OPENTTD_ADMIN_PORT` | No | `3977` | Admin port the bot connects to. Must match `server_admin_port` in `openttd.cfg` |
 | `BOT_NAME` | No | `utils-bot` | Name the bot presents to the server on the admin connection |
 | `SAVENAME` | No | `autosave_bot` | Save file name used by the bot for periodic saves. `.sav` extension is stripped automatically if present |
@@ -151,6 +156,7 @@ admin_password = <OPENTTD_ADMIN_PASSWORD>
 | `TCP_GUARD_PROXY_TIMEOUT` | No | `30m` | How long an idle connection is kept open. Use nginx time format: `30m`, `3h`, `1h30m` |
 | `TCP_GUARD_CONNECT_TIMEOUT` | No | `5s` | How long to wait for the upstream (openttd-server) to accept a TCP connection |
 | `TCP_GUARD_PREREAD_TIMEOUT` | No | `5s` | How long to wait for the client to send data after connecting |
+| `TCP_GUARD_MAX_CONN` | No | `16` | Maximum simultaneous TCP connections (acts as a player cap since all traffic arrives from the playit tunnel with a single source IP) |
 
 ### Bot Chat Commands
 

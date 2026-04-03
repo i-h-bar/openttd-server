@@ -2,7 +2,7 @@
 set -e
 
 echo "[tcp-guard] Applying configuration..."
-envsubst '${TCP_GUARD_PROXY_TIMEOUT} ${TCP_GUARD_CONNECT_TIMEOUT} ${TCP_GUARD_PREREAD_TIMEOUT}' \
+envsubst '${TCP_GUARD_PROXY_TIMEOUT} ${TCP_GUARD_CONNECT_TIMEOUT} ${TCP_GUARD_PREREAD_TIMEOUT} ${TCP_GUARD_MAX_CONN}' \
     < /etc/nginx/nginx.conf > /tmp/nginx-rendered.conf
 
 echo "[tcp-guard] Starting nginx TCP/UDP proxy on port 3979..."
