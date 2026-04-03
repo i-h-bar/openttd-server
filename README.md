@@ -66,6 +66,7 @@ The script:
 2. **Creates or updates `openttd.cfg` and `secrets.cfg`** inside `OPENTTD_DATA_DIR`:
    - If either file is missing it is created with sensible defaults
    - `allow_insecure_admin_login = true` is enforced in `openttd.cfg` (required for the bot)
+   - `SERVER_NAME` (optional) is synced to `server_name` in `private.cfg`
    - `OPENTTD_ADMIN_PASSWORD` is synced to `admin_password` in `secrets.cfg`
    - `SERVER_PASSWORD` (optional) is synced to `server_password` in `secrets.cfg`
 3. Builds the tcp-guard image and starts all containers
@@ -94,9 +95,9 @@ SERVER_NAME="My OpenTTD Server"           # optional — shown in the multiplaye
 SAVE_INTERVAL_MINS=10
 ```
 
-### `openttd.cfg` and `secrets.cfg`
+### `openttd.cfg`, `private.cfg`, and `secrets.cfg`
 
-`run.sh` creates and maintains these files automatically based on your `.env`. You do not need to edit them by hand. If either file is missing it is created with working defaults; if it already exists only the values controlled by `.env` are updated.
+`run.sh` creates and maintains these files automatically based on your `.env`. You do not need to edit them by hand. If a file is missing it is created with working defaults; if it already exists only the values controlled by `.env` are updated.
 
 The bot requires the following settings in `openttd.cfg` under `[network]` — `run.sh` ensures they are always set:
 
@@ -104,6 +105,13 @@ The bot requires the following settings in `openttd.cfg` under `[network]` — `
 [network]
 server_admin_port = 3977
 allow_insecure_admin_login = true
+```
+
+`private.cfg` (where OpenTTD 15.x stores the server name and other private settings):
+
+```ini
+[network]
+server_name = <SERVER_NAME>
 ```
 
 `secrets.cfg` (where OpenTTD 15.x stores all passwords):
@@ -137,7 +145,7 @@ admin_password = <OPENTTD_ADMIN_PASSWORD>
 |---|---|---|---|
 | `OPENTTD_ADMIN_PASSWORD` | Yes | — | Password for the OpenTTD admin port. Synced to `admin_password` in `secrets.cfg` by `run.sh` |
 | `SERVER_PASSWORD` | No | — | Join password for the game server. Synced to `server_password` in `secrets.cfg` by `run.sh`. Leave unset for a public server |
-| `SERVER_NAME` | No | — | Name shown in the multiplayer lobby. Synced to `server_name` in `openttd.cfg` by `run.sh` |
+| `SERVER_NAME` | No | — | Name shown in the multiplayer lobby. Synced to `server_name` in `private.cfg` by `run.sh` |
 | `OPENTTD_ADMIN_PORT` | No | `3977` | Admin port the bot connects to. Must match `server_admin_port` in `openttd.cfg` |
 | `BOT_NAME` | No | `utils-bot` | Name the bot presents to the server on the admin connection |
 | `SAVENAME` | No | `autosave_bot` | Save file name used by the bot for periodic saves. `.sav` extension is stripped automatically if present |

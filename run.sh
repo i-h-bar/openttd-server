@@ -33,6 +33,7 @@ echo "Using PUID=${PUID} PGID=${PGID}"
 
 OPENTTD_CFG="${OPENTTD_DATA_DIR}/openttd.cfg"
 SECRETS_CFG="${OPENTTD_DATA_DIR}/secrets.cfg"
+PRIVATE_CFG="${OPENTTD_DATA_DIR}/private.cfg"
 
 # Sets (or adds) a key = value within a named [section] of an ini-style file.
 # Handles missing sections and missing keys. Preserves all comments and formatting.
@@ -68,7 +69,6 @@ if [ ! -f "$OPENTTD_CFG" ]; then
     echo "  openttd.cfg not found — creating with defaults..."
     cat > "$OPENTTD_CFG" <<EOF
 [network]
-server_name = ${SERVER_NAME:-}
 server_admin_port = 3977
 server_admin_chat = true
 allow_insecure_admin_login = true
@@ -78,8 +78,20 @@ else
     echo "  openttd.cfg found — checking settings..."
     set_ini_value "$OPENTTD_CFG" "network" "allow_insecure_admin_login" "true"
     echo "    allow_insecure_admin_login = true  ✓"
+fi
+
+# --- private.cfg ---
+if [ ! -f "$PRIVATE_CFG" ]; then
+    echo "  private.cfg not found — creating..."
+    cat > "$PRIVATE_CFG" <<EOF
+[network]
+server_name = ${SERVER_NAME:-}
+EOF
+    echo "  Created $PRIVATE_CFG"
+else
+    echo "  private.cfg found — checking settings..."
     if [ -n "${SERVER_NAME:-}" ]; then
-        set_ini_value "$OPENTTD_CFG" "network" "server_name" "$SERVER_NAME"
+        set_ini_value "$PRIVATE_CFG" "network" "server_name" "$SERVER_NAME"
         echo "    server_name synced  ✓"
     fi
 fi
