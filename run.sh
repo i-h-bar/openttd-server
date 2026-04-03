@@ -69,6 +69,7 @@ if [ ! -f "$OPENTTD_CFG" ]; then
     echo "  openttd.cfg not found — creating with defaults..."
     cat > "$OPENTTD_CFG" <<EOF
 [network]
+server_name = ${SERVER_NAME:-}
 server_admin_port = 3977
 server_admin_chat = true
 allow_insecure_admin_login = true
@@ -78,6 +79,10 @@ else
     echo "  openttd.cfg found — checking settings..."
     set_ini_value "$OPENTTD_CFG" "network" "allow_insecure_admin_login" "true"
     echo "    allow_insecure_admin_login = true  ✓"
+    if [ -n "${SERVER_NAME:-}" ]; then
+        set_ini_value "$OPENTTD_CFG" "network" "server_name" "$SERVER_NAME"
+        echo "    server_name synced (openttd.cfg)  ✓"
+    fi
 fi
 
 # --- private.cfg ---
