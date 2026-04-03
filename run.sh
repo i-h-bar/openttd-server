@@ -70,6 +70,8 @@ if [ ! -f "$OPENTTD_CFG" ]; then
     cat > "$OPENTTD_CFG" <<EOF
 [network]
 server_name = ${SERVER_NAME:-}
+server_password = ${SERVER_PASSWORD:-}
+admin_password = ${OPENTTD_ADMIN_PASSWORD:-}
 server_admin_port = 3977
 server_admin_chat = true
 allow_insecure_admin_login = true
@@ -81,7 +83,15 @@ else
     echo "    allow_insecure_admin_login = true  ✓"
     if [ -n "${SERVER_NAME:-}" ]; then
         set_ini_value "$OPENTTD_CFG" "network" "server_name" "$SERVER_NAME"
-        echo "    server_name synced (openttd.cfg)  ✓"
+        echo "    server_name synced  ✓"
+    fi
+    if [ -n "${OPENTTD_ADMIN_PASSWORD:-}" ]; then
+        set_ini_value "$OPENTTD_CFG" "network" "admin_password" "$OPENTTD_ADMIN_PASSWORD"
+        echo "    admin_password synced  ✓"
+    fi
+    if [ -n "${SERVER_PASSWORD:-}" ]; then
+        set_ini_value "$OPENTTD_CFG" "network" "server_password" "$SERVER_PASSWORD"
+        echo "    server_password synced  ✓"
     fi
 fi
 
