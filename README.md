@@ -146,6 +146,7 @@ admin_password = <OPENTTD_ADMIN_PASSWORD>
 | `OPENTTD_ADMIN_PASSWORD` | Yes | — | Password for the OpenTTD admin port. Synced to `admin_password` in `secrets.cfg` by `run.sh` |
 | `SERVER_PASSWORD` | No | — | Join password for the game server. Synced to `server_password` in `secrets.cfg` by `run.sh`. Leave unset for a public server |
 | `SERVER_NAME` | No | — | Name shown in the multiplayer lobby. Synced to `server_name` in `private.cfg` by `run.sh` |
+| `CLIENT_NAME` | No | — | Client name for the server host. Synced to `client_name` in `openttd.cfg` by `run.sh` |
 | `OPENTTD_ADMIN_PORT` | No | `3977` | Admin port the bot connects to. Must match `server_admin_port` in `openttd.cfg` |
 | `BOT_NAME` | No | `utils-bot` | Name the bot presents to the server on the admin connection |
 | `SAVENAME` | No | `autosave_bot` | Save file name used by the bot for periodic saves. `.sav` extension is stripped automatically if present |

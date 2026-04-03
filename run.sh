@@ -70,6 +70,7 @@ if [ ! -f "$OPENTTD_CFG" ]; then
     cat > "$OPENTTD_CFG" <<EOF
 [network]
 server_name = ${SERVER_NAME:-}
+client_name = ${CLIENT_NAME:-}
 server_password = ${SERVER_PASSWORD:-}
 admin_password = ${OPENTTD_ADMIN_PASSWORD:-}
 server_admin_port = 3977
@@ -84,6 +85,10 @@ else
     if [ -n "${SERVER_NAME:-}" ]; then
         set_ini_value "$OPENTTD_CFG" "network" "server_name" "$SERVER_NAME"
         echo "    server_name synced  ✓"
+    fi
+    if [ -n "${CLIENT_NAME:-}" ]; then
+        set_ini_value "$OPENTTD_CFG" "network" "client_name" "$CLIENT_NAME"
+        echo "    client_name synced  ✓"
     fi
     if [ -n "${OPENTTD_ADMIN_PASSWORD:-}" ]; then
         set_ini_value "$OPENTTD_CFG" "network" "admin_password" "$OPENTTD_ADMIN_PASSWORD"
